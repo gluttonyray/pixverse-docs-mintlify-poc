@@ -1,0 +1,239 @@
+---
+title: Quick Start
+description: Create your first video with the PixVerse API in three steps.
+---
+
+The example script generates a 5-second, 540p, 16:9 video with the `v6` model and saves it as `first-video.mp4`.
+
+This example costs **35 API credits**. New accounts start with no API credits, and credits from the PixVerse web app don't carry over. [Subscribe to an API plan](/pricing/index) before running the script.
+
+<Steps>
+
+<Step title="Sign in to the PixVerse Platform">
+
+Open the [PixVerse Platform](https://platform.pixverse.ai/login?redirectPath=%2Fapi-key) and sign in. The link takes you to the **API Key** page after sign-in.
+
+</Step>
+<Step title="Create an API key" id="create-an-api-key">
+
+<Note>
+  Anyone with your key can spend your API credits. Keep it in a server-side
+  environment variable or secrets manager; don't put it in browser code, apps
+  you distribute, Git or logs.
+</Note>
+
+On the [**API Key**](https://platform.pixverse.ai/login?redirectPath=%2Fapi-key) page, select **Create Key**.
+
+Copy the key when it appears. The full key is shown only once.
+
+Set it as `PIXVERSE_API_KEY` before running the example:
+
+<CodeGroup>
+
+```bash macOS / Linux
+export PIXVERSE_API_KEY="your-api-key"
+```
+
+```powershell Windows (PowerShell)
+$env:PIXVERSE_API_KEY="your-api-key"
+```
+
+</CodeGroup>
+
+</Step>
+<Step title="Generate your first video">
+
+Choose a language below, then follow its instructions to save and run the script.
+
+**The script automatically:**
+
+- **Submits** a text-to-video task.
+- **Waits** for completion, checking the task status every 5 seconds. See [Get video task status](/api/video-task-status) for the status values.
+- **Downloads** the finished video as `first-video.mp4`.
+
+**Request headers, already included in the script:**
+
+- `API-KEY`: your API key, without a `Bearer` prefix.
+- `Ai-trace-id`: a new UUID for every request.
+
+<Tabs>
+<Tab title="cURL">
+
+Requires `curl`, `jq`, and `uuidgen`. Save as `first-video.sh` and run `bash first-video.sh`.
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+: "${PIXVERSE_API_KEY:?Set PIXVERSE_API_KEY first}"
+BASE="https://app-api.pixverse.ai/openapi/v2"
+
+# 1. Submit a text-to-video task (v6, 5 s, 540p, 16:9)
+SUBMIT=$(curl -sS -X POST "$BASE/video/text/generate" \
+  -H "API-KEY: $PIXVERSE_API_KEY" \
+  -H "Ai-trace-id: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"v6","prompt":"A serene mountain lake at sunrise, mist rising from the water, slow camera pan","aspect_ratio":"16:9","duration":5,"quality":"540p"}')
+[ "$(jq -r '.ErrCode' <<<"$SUBMIT")" = "0" ] || { echo "Submit failed: $SUBMIT" >&2; exit 1; }
+VIDEO_ID=$(jq -r '.Resp.video_id' <<<"$SUBMIT")
+echo "Submitted video_id=$VIDEO_ID"
+
+# 2. Poll every 5 s; stop on 1 (with a URL), 6, 7 or 8; give up after 10 minutes
+DEADLINE=$(( $(date +%s) + 600 ))
+while :; do
+  R=$(curl -sS "$BASE/video/result/$VIDEO_ID" \
+    -H "API-KEY: $PIXVERSE_API_KEY" \
+    -H "Ai-trace-id: $(uuidgen)")
+  [ "$(jq -r '.ErrCode' <<<"$R")" = "0" ] || { echo "Status check failed: $R" >&2; exit 1; }
+  STATUS=$(jq -r '.Resp.status' <<<"$R")
+  URL=$(jq -r '.Resp.url // empty' <<<"$R")
+  if [ "$STATUS" = "1" ] && [ -n "$URL" ]; then break; fi
+  case "$STATUS" in 6|7|8) echo "Task ended with status $STATUS" >&2; exit 1 ;; esac
+  [ "$(date +%s)" -lt "$DEADLINE" ] || { echo "Still generating after 10 minutes" >&2; exit 1; }
+  sleep 5
+done
+
+# 3. Download the video
+curl -fL -o first-video.mp4 "$URL"
+echo "Saved first-video.mp4"
+```
+
+</Tab>
+<Tab title="Python">
+
+Requires Python 3.8+ and `pip install requests`. Save as `first_video.py` and run `python first_video.py`.
+
+```python
+import os, time, uuid
+import requests
+
+BASE = "https://app-api.pixverse.ai/openapi/v2"
+API_KEY = os.environ["PIXVERSE_API_KEY"]
+
+def call(method, path, body=None):
+    # A new Ai-trace-id for every request
+    headers = {"API-KEY": API_KEY, "Ai-trace-id": str(uuid.uuid4())}
+    r = requests.request(method, BASE + path, headers=headers, json=body, timeout=30)
+    data = r.json()
+    if data.get("ErrCode") != 0:
+        raise RuntimeError(f"HTTP {r.status_code}, ErrCode {data.get('ErrCode')}: {data.get('ErrMsg')}")
+    return data["Resp"]
+
+video_id = call("POST", "/video/text/generate", {
+    "model": "v6",
+    "prompt": "A serene mountain lake at sunrise, mist rising from the water, slow camera pan",
+    "aspect_ratio": "16:9",
+    "duration": 5,
+    "quality": "540p",
+})["video_id"]
+print("Submitted video_id", video_id)
+
+deadline = time.time() + 600
+while True:
+    res = call("GET", f"/video/result/{video_id}")
+    if res.get("status") == 1 and res.get("url"):
+        break
+    if res.get("status") in (6, 7, 8):
+        raise RuntimeError(f"Task {video_id} ended with status {res['status']}")
+    if time.time() > deadline:
+        raise TimeoutError(f"Task {video_id} still generating after 10 minutes")
+    time.sleep(5)
+
+with requests.get(res["url"], stream=True, timeout=120) as r:
+    r.raise_for_status()
+    with open("first-video.mp4", "wb") as f:
+        for chunk in r.iter_content(chunk_size=1 << 20):
+            f.write(chunk)
+print("Saved first-video.mp4")
+```
+
+</Tab>
+<Tab title="Node.js">
+
+Requires Node.js 18+. Save as `first-video.mjs` and run `node first-video.mjs`.
+
+```js
+import { randomUUID } from 'node:crypto'
+import { writeFile } from 'node:fs/promises'
+
+const BASE = 'https://app-api.pixverse.ai/openapi/v2'
+const API_KEY = process.env.PIXVERSE_API_KEY
+if (!API_KEY) throw new Error('Set PIXVERSE_API_KEY first')
+
+async function call(method, path, body) {
+  const headers = { 'API-KEY': API_KEY, 'Ai-trace-id': randomUUID() }
+  if (body) headers['Content-Type'] = 'application/json'
+  const res = await fetch(BASE + path, {
+    method,
+    headers,
+    body: body && JSON.stringify(body),
+  })
+  const data = await res.json()
+  if (data.ErrCode !== 0)
+    throw new Error(
+      `HTTP ${res.status}, ErrCode ${data.ErrCode}: ${data.ErrMsg}`,
+    )
+  return data.Resp
+}
+
+const { video_id } = await call('POST', '/video/text/generate', {
+  model: 'v6',
+  prompt:
+    'A serene mountain lake at sunrise, mist rising from the water, slow camera pan',
+  aspect_ratio: '16:9',
+  duration: 5,
+  quality: '540p',
+})
+console.log('Submitted video_id', video_id)
+
+const deadline = Date.now() + 10 * 60 * 1000
+let result
+while (true) {
+  result = await call('GET', `/video/result/${video_id}`)
+  if (result.status === 1 && result.url) break
+  if ([6, 7, 8].includes(result.status))
+    throw new Error(`Task ${video_id} ended with status ${result.status}`)
+  if (Date.now() > deadline)
+    throw new Error(`Task ${video_id} still generating after 10 minutes`)
+  await new Promise((resolve) => setTimeout(resolve, 5000))
+}
+
+const video = await fetch(result.url)
+if (!video.ok) throw new Error(`Download failed: HTTP ${video.status}`)
+await writeFile('first-video.mp4', Buffer.from(await video.arrayBuffer()))
+console.log('Saved first-video.mp4')
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+</Steps>
+
+## If your first call fails
+
+| Symptom                            | What it means                                                                                                                    |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `ErrCode` is not `0`               | The request was rejected. Read `ErrMsg`.                                                                                         |
+| `ErrMsg` such as `Invalid API-KEY` | The key is wrong, deleted or disabled. Check that you copied the whole key and sent it in the `API-KEY` header, not in the body. |
+| `500090`                           | Your balance is too low. [Get API credits](/pricing/index).                                                                      |
+| `500044`                           | You reached your plan's concurrency limit. Wait for a running task to finish.                                                    |
+| `400011`, `400013`, `400017`       | A parameter is missing or invalid. Check the submitted parameters.                                                               |
+| `500054`, `500063`                 | The input failed content moderation.                                                                                             |
+| Status stays `5` for 10 minutes    | Stop polling. See [Get video task status](/api/video-task-status).                                                               |
+
+## Explore more
+
+<Columns cols={2}>
+  <Card title="First and last frame" href="/guides/first-last-frame">
+    Generate a video between two images.
+  </Card>
+  <Card title="Upload media" href="/shared-apis/upload-media">
+    Get the IDs that generation and editing requests take as input.
+  </Card>
+  <Card title="Image to video" href="/api/image-to-video">
+    Animate an image with a prompt.
+  </Card>
+  <Card title="Pricing" href="/pricing/index">
+    Check API credits and costs before running a request.
+  </Card>
+</Columns>

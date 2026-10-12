@@ -1,0 +1,27 @@
+---
+title: 'Guided first & last frame'
+description: 'Compare a custom model-aware request form with Mintlify’s standard API playground.'
+---
+
+import { GuidedFirstLastFrame, GuidedField, GuidedSelect } from '/snippets/guided-request.jsx'
+
+<Info>
+  This experiment previews requests locally. It never sends an API request,
+  needs no API key and creates no paid tasks.
+</Info>
+
+## Custom request builder
+
+Try the model and quality controls, then switch to JSON. Both editing modes use the existing demo’s rules for supported durations and audio fields.
+
+<GuidedFirstLastFrame />
+
+## What to verify
+
+- Switch between v6 and v5: the applicable audio fields appear and previous values remain available when switching back.
+- Set a longer duration on v6, then select an older model: the value stays visible with a validation message until you choose a supported duration.
+- Remove an audio field in valid JSON, return to the form and switch models: the removed value must not come back.
+- Enter invalid JSON or a parameter of the wrong type: **Preview request** must show the error instead of validating an older request.
+- Open a dropdown with the keyboard, use the arrow keys and Enter, and press Escape to close it. Closing the modal returns focus to **Try it**.
+
+The generated API reference remains available in [First & last frame](/api/first-last-frame). This custom component is a separate experiment, so we can compare the maintenance cost and user experience before choosing a migration approach.

@@ -1,0 +1,121 @@
+---
+title: First and last frame
+description: Generate a video that starts on one image and ends on another, with a prompt that describes the transition.
+---
+
+First and last frame generation takes two images, one for the opening frame and one for the closing frame, and generates the video in between. It works well for transitions, transformations and morphing sequences. Every request field is listed in the [API reference](/api/first-last-frame).
+
+<Columns cols={2}>
+  <Frame>
+    <video
+      src="https://media.pixverse.ai/asset/media/0512_transition_apiplatform_v1.mp4"
+      controls
+      playsInline
+      preload="metadata"
+      aria-label="First and last frame transition example"
+    />
+  </Frame>
+  <Frame>
+    <video
+      src="https://media.pixverse.ai/asset/media/transition_guidance_video.mp4"
+      controls
+      playsInline
+      preload="metadata"
+      aria-label="First and last frame guidance example"
+    />
+  </Frame>
+</Columns>
+
+## Before you begin
+
+- **An API key with credits.** If you haven't made a call yet, start with the [Quick Start](/quickstart). The examples read the key from `PIXVERSE_API_KEY`.
+- **Two images**, one for the first frame and one for the last. Each must be JPG, JPEG, PNG or WebP, under 20 MB, and no more than 10,000 pixels wide or high.
+
+## Generate a video
+
+<Steps>
+
+<Step title="Upload both images">
+
+Upload each image and keep both `img_id` values. You can send a file in the `image` field or a public URL in `image_url`.
+
+```bash
+upload() {
+  curl -sS -X POST "https://app-api.pixverse.ai/openapi/v2/image/upload" \
+    -H "API-KEY: $PIXVERSE_API_KEY" \
+    -H "Ai-trace-id: $(uuidgen)" \
+    -F "image=@$1" | jq -r '.Resp.img_id'
+}
+
+FIRST_ID=$(upload ./first.jpg)
+LAST_ID=$(upload ./last.jpg)
+echo "first=$FIRST_ID last=$LAST_ID"
+```
+
+If either value is `null`, the upload failed. Run the `curl` command on its own to see the `ErrCode` and `ErrMsg`. See [Upload media](/shared-apis/upload-media) for details.
+
+</Step>
+<Step title="Submit the task">
+
+Pass both IDs with a prompt that describes how the first frame turns into the last.
+
+```bash
+BODY=$(jq -n --argjson first "$FIRST_ID" --argjson last "$LAST_ID" '{
+  model: "v6",
+  prompt: "The cat slowly transforms into a puppy",
+  first_frame_img: $first,
+  last_frame_img: $last,
+  duration: 5,
+  quality: "540p"
+}')
+
+SUBMIT=$(curl -sS -X POST "https://app-api.pixverse.ai/openapi/v2/video/transition/generate" \
+  -H "API-KEY: $PIXVERSE_API_KEY" \
+  -H "Ai-trace-id: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d "$BODY")
+echo "$SUBMIT"
+VIDEO_ID=$(jq -r '.Resp.video_id' <<<"$SUBMIT")
+```
+
+A successful response contains the task ID in `Resp.video_id`.
+
+</Step>
+<Step title="Get the result">
+
+Poll the [status endpoint](/api/video-task-status) with the `video_id` every 5 seconds. When `Resp.status` is `1`, download the video from `Resp.url`. Stop on `6`, `7` or `8`. See [Get video task status](/api/video-task-status) for details. You can also use webhooks instead of polling.
+
+</Step>
+</Steps>
+
+## Model limits
+
+Use `v6` or `c1` for new integrations. Every model accepts `360p`, `540p`, `720p` and `1080p`. The duration depends on the model:
+
+| Model              | `duration` (seconds)            | Audio switch             |
+| ------------------ | ------------------------------- | ------------------------ |
+| `v6`, `c1`         | 1 to 15                         | Yes                      |
+| `v5.6`, `v5.5`     | 5, 8 or 10. 1080p can't use 10. | Yes                      |
+| `v5`, `v4.5`, `v4` | 5 or 8                          | No, use `sound_effect_*` |
+| `v3.5`             | 5 or 8. 1080p can't use 8.      | No, use `sound_effect_*` |
+
+- **No `aspect_ratio` and no multi-clip.** First and last frame doesn't take `aspect_ratio` or `generate_multi_clip_switch`.
+- **Audio:** `generate_audio_switch: true` adds generated audio and raises the per-second price. The `sound_effect_*` and `lip_sync_tts_*` fields only apply to `v5` and earlier.
+- **More than two frames:** to pass through up to seven images, use multi-keyframe transitions, which runs on legacy models only.
+
+## Cost
+
+First and last frame uses the same per-second rates as text to video. The request above costs **35 credits** (`v6`, 5 seconds, 540p, no audio). See [Pricing](/pricing/index) for how credits are charged.
+
+If the request fails, read `ErrCode` and `ErrMsg` in the response.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="API reference" href="/api/first-last-frame">
+    Review every request field and try the endpoint.
+  </Card>
+  <Card title="Get video task status" href="/api/video-task-status">
+    Retrieve the result of a submitted task.
+  </Card>
+</Columns>

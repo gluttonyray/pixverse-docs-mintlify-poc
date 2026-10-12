@@ -1,0 +1,14 @@
+---
+title: Modify
+description: Edit a video from a text prompt, with optional masks and reference images.
+openapi: "openapi/pixverse-poc.yaml POST /openapi/v2/video/modify/generate"
+---
+
+Provide either `source_video_id` from a generated video or `video_media_id` from
+an uploaded video. Provide exactly one of these fields; the schema expresses
+this rule with `oneOf`.
+
+Use `@selection0`, `@selection1`, or `@selection2` to refer to masks in the
+prompt. Refer to uploaded images as `@img0`, `@img1`, and so on.
+The request returns a `video_id`; use
+[Get video task status](/api/video-task-status) to get the result.

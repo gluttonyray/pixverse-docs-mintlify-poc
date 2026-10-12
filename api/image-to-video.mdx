@@ -1,0 +1,12 @@
+---
+title: Image to video
+description: Animate an uploaded image from a text prompt.
+openapi: "openapi/pixverse-poc.yaml POST /openapi/v2/video/img/generate"
+---
+
+Use the `img_id` returned by [Upload image](/api/upload-image). The request
+returns a `video_id`; use [Get video task status](/api/video-task-status) to get
+the result.
+
+To apply a specific effect template, see [Template video](/api/template-video).
+The two pages describe separate request variants of the same API path.

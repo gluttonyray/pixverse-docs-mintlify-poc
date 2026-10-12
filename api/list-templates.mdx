@@ -1,0 +1,13 @@
+---
+title: List templates
+description: Find video and image templates, their IDs, input requirements and prices.
+openapi: "openapi/pixverse-poc.yaml GET /openapi/v2/video/effects/templates/list"
+---
+
+This endpoint serves both video and image templates. Set `type=1` for video
+templates or `type=2` for image templates; omit it to list both.
+
+Use the returned `template_id` and `effect_type` when generating a
+[Template video](/api/template-video). Supported qualities and durations are
+returned with each template. Match the template's input image requirements
+before sending a generation request.

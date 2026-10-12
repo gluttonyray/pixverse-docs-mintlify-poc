@@ -1,0 +1,16 @@
+---
+title: Get video task status
+description: Check a video task and get the finished video URL.
+openapi: "openapi/pixverse-poc.yaml GET /openapi/v2/video/result/{id}"
+---
+
+Poll the `video_id` returned by a generation request until the task succeeds or
+fails. On success, download the video from `Resp.url`. For the basic workflow,
+see [Quick Start](/quickstart).
+
+| Status | Meaning |
+| --- | --- |
+| `1` | Generation successful |
+| `5` | Generating |
+| `7` | Content moderation failed |
+| `8` | Generation failed |

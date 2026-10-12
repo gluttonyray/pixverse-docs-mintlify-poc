@@ -1,0 +1,96 @@
+---
+title: Pricing overview
+description: API plans, credits and video generation prices.
+---
+
+Every API task is paid for with **API credits**. You get credits from a monthly API plan and, on a paid plan, from top-up credit packs. New accounts don't include free credits, so subscribe to a plan before your first call.
+
+<Note>
+  A membership or credits on the PixVerse web app (app.pixverse.ai) don't apply
+  to the API, and API credits can't be used in the web app. Buy API plans and
+  credits on the [PixVerse
+  Platform](https://platform.pixverse.ai/login?redirectPath=%2Fbilling).
+</Note>
+
+## Plans
+
+Your account is on one plan at a time. The plan decides your monthly credits, concurrency limit, highest output quality, included features, and whether you can buy top-up credits. The **Billing** page is the current source for plans and prices.
+
+| Plan      | Price  | Monthly credits |
+| --------- | ------ | --------------- |
+| Essential | $100   | 22,250          |
+| Scale     | $1,500 | 360,000         |
+| Business  | $6,000 | 1,636,365       |
+
+Plans are subscriptions paid through Stripe. They renew automatically every 30 days until you cancel. Monthly credits reset every month. Paid plans can also buy top-up credits. Free accounts can't buy top-up credits.
+
+For custom pricing, volume discounts, more or custom effects, or a higher concurrency limit, click **Let's talk** on the **Custom Plan** card, or email [api_business@pixverse.ai](mailto:api_business@pixverse.ai).
+
+## Subscribe to a plan
+
+<Steps>
+
+  <Step title="Open Billing">
+
+    Open [Billing on the platform](https://platform.pixverse.ai/login?redirectPath=%2Fbilling) and sign in.
+
+  </Step>
+  <Step title="Choose a plan">
+
+    Under **Find the right API plan**, compare the plans and click **Purchase** on the one you want.
+
+  </Step>
+  <Step title="Pay">
+
+    Complete payment on the Stripe checkout page. Billing then shows your plan and credits under **Subscription Details**.
+
+  </Step>
+</Steps>
+
+## How credits are charged
+
+- **C1 and V6** charge per second of video: the rate times the `duration` you request.
+- **Legacy models** (V5.6 and earlier) charge a fixed price per clip, by quality and duration.
+- **Editing, audio, avatar and agent features** have their own rates.
+- Tasks that fail moderation (status `7`) or fail to generate (status `8`) are refunded.
+
+## V6
+
+Text to video, image to video, first and last frame, extend, and reference to video with images. Credits per second:
+
+| Quality | Without audio | With audio |
+| ------- | ------------- | ---------- |
+| 360p    | 5             | 7          |
+| 540p    | 7             | 9          |
+| 720p    | 9             | 12         |
+| 1080p   | 18            | 23         |
+
+The [Quick Start](/quickstart) and [first and last frame guide](/guides/first-last-frame) use V6, 5 seconds, 540p without audio. Each request costs **35 credits**. A 5-second V6 video at 720p without audio costs **45 credits**.
+
+## C1
+
+Text to video, image to video, first and last frame, and reference to video. Credits per second:
+
+| Quality | Without audio | With audio |
+| ------- | ------------- | ---------- |
+| 360p    | 6             | 8          |
+| 540p    | 8             | 10         |
+| 720p    | 10            | 13         |
+| 1080p   | 19            | 24         |
+
+## Buy top-up credits
+
+| Price  | Credits   |
+| ------ | --------- |
+| $10    | 2,000     |
+| $50    | 10,000    |
+| $100   | 20,000    |
+| $500   | 100,000   |
+| $2,000 | 400,000   |
+| $5,000 | 1,000,000 |
+
+On Billing, select **Credits top-up**, choose a pack, select **Purchase**, and complete payment through Stripe.
+
+## Check your balance
+
+The **Subscription Details** card on Billing shows **Remaining API Credits**, **Monthly Credits** and **Top-up Credits**. When your balance is too low for a task, the generation request fails with `ErrCode` `500090`. Add credits and submit again with a new `Ai-trace-id`.

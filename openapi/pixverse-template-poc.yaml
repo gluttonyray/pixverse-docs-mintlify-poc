@@ -1,0 +1,128 @@
+# Seeded from app-docs OpenAPI for this experiment.
+# This file is editable; startup does not regenerate it.
+# OpenAPI 3.0 schema examples arrays normalized to singular example.
+openapi: 3.0.1
+info:
+  title: PixVerse Platform API (variants)
+  description: Operations that share a method and path with an operation in the
+    main specification.
+  version: 2.0.0
+servers:
+  - url: https://app-api.pixverse.ai
+    description: Production
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: video-generation
+    x-displayName: Video generation
+paths:
+  /openapi/v2/video/img/generate:
+    post:
+      summary: Template video
+      deprecated: false
+      description: |
+        Template video based on Image-to-Video generation
+      tags:
+        - video-generation
+      parameters:
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  description: The actual duration follows the template video. You can simply pass
+                    5.
+                  type: integer
+                  example: 5
+                img_id:
+                  type: integer
+                  description: Image ID from Upload image API. single image or single-image
+                    templates
+                  format: uint64
+                img_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: img_ids is only for multi-image templates. ex) "img_ids ":[0,0]
+                model:
+                  description: Any model can be used, but when template_id is provided, the model
+                    field is ignored. We recommend using v6
+                  type: string
+                  example: v3.5
+                prompt:
+                  description: You can leave prompt empty. When template_id is provided, the
+                    prompt field will be ignored.
+                  type: string
+                  maxLength: 2048
+                quality:
+                  description: Video quality ("360p"(Turbo), "540p", "720p", "1080p")
+                  type: string
+                  example: 540p
+                template_id:
+                  description: Template ID (template_id must be activated before use)
+                  type: integer
+                  example: 302325299692608
+                sound_effect_switch:
+                  type: boolean
+                  description: When set to true, background music will be added, no additional
+                    credit
+              required:
+                - duration
+                - img_id
+                - model
+                - prompt
+                - quality
+            example:
+              duration: 5
+              img_id: 0
+              model: v6
+              prompt: string
+              quality: 720p
+              template_id: 302325299692608
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/controller.ResponseData"
+          headers: {}
+      operationId: template-video
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: API-KEY
+      description: Your API key from the API Key page of the PixVerse Platform. Send
+        it as-is, without a Bearer prefix.
+  schemas:
+    controller.ResponseData:
+      type: object
+      properties:
+        ErrCode:
+          type: integer
+        ErrMsg:
+          type: string
+        Resp:
+          $ref: "#/components/schemas/dto.V2OpenAPII2VResp"
+    dto.V2OpenAPII2VResp:
+      type: object
+      properties:
+        video_id:
+          description: Video_id
+          type: integer

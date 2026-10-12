@@ -1,0 +1,105 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "PixVerse API Platform Docs",
+  "theme": "mint",
+  "colors": {
+    "primary": "#7750d8",
+    "light": "#9d85f0",
+    "dark": "#7750d8"
+  },
+  "appearance": { "default": "light" },
+  "fonts": { "family": "Plus Jakarta Sans" },
+  "background": { "color": { "light": "#ffffff", "dark": "#0f0e13" } },
+  "icons": { "library": "lucide" },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          { "group": "Get started", "pages": ["index", "quickstart"] },
+          {
+            "group": "User guides",
+            "pages": [
+              { "group": "Shared APIs", "pages": ["shared-apis/upload-media"] },
+              { "group": "Create video", "pages": ["guides/first-last-frame"] }
+            ]
+          },
+          {
+            "group": "Compatibility tests",
+            "pages": ["experiments/guided-first-last-frame"]
+          }
+        ]
+      },
+      {
+        "tab": "API",
+        "groups": [
+          {
+            "group": "API reference",
+            "pages": [
+              {
+                "group": "Shared APIs",
+                "expanded": true,
+                "pages": [
+                  {
+                    "group": "Uploads",
+                    "expanded": true,
+                    "pages": ["api/upload-image"]
+                  },
+                  {
+                    "group": "Tasks",
+                    "expanded": true,
+                    "pages": ["api/video-task-status"]
+                  },
+                  "api/list-templates"
+                ]
+              },
+              {
+                "group": "Create video",
+                "expanded": true,
+                "pages": [
+                  "api/first-last-frame",
+                  "api/image-to-video",
+                  "api/template-video"
+                ]
+              },
+              { "group": "Edit video", "pages": ["api/modify"] }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Pricing",
+        "groups": [{ "group": "Pricing", "pages": ["pricing/index"] }]
+      },
+      {
+        "tab": "Release notes",
+        "groups": [
+          { "group": "Release notes", "pages": ["release-notes/index"] }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [{ "label": "Support", "href": "mailto:api@pixverse.ai" }],
+    "primary": {
+      "type": "button",
+      "label": "Go to Playground",
+      "href": "https://platform.pixverse.ai/playground?utm_source=apidocs&utm_medium=website&utm_campaign=normal"
+    }
+  },
+  "api": {
+    "playground": { "display": "interactive", "proxy": false },
+    "examples": {
+      "languages": [
+        "curl",
+        "javascript",
+        "go",
+        "python",
+        "java",
+        "csharp",
+        "rust"
+      ],
+      "prefill": true
+    }
+  }
+}

@@ -1,0 +1,16 @@
+---
+title: First and last frame
+description: Generate a video that starts on one image and ends on another.
+openapi: "openapi/pixverse-poc.yaml POST /openapi/v2/video/transition/generate"
+---
+
+Upload both images using [Upload image](/api/upload-image), then provide the
+returned image IDs as `first_frame_img` and `last_frame_img`. The request returns
+a `video_id`; use [Get video task status](/api/video-task-status) to get the result.
+
+The model determines the available durations and audio fields. The generated
+parameter descriptions preserve the current API contract. See the
+[First and last frame guide](/guides/first-last-frame) for model limits.
+
+Compare the native playground with the
+[guided request editor experiment](/experiments/guided-first-last-frame).

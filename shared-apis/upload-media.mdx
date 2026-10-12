@@ -1,0 +1,251 @@
+---
+title: Upload media
+description: Upload images, videos and audio to get the IDs that generation and editing requests take as input.
+---
+
+Generation and editing endpoints don't accept files in the request body. You upload each file first, get an ID back, and pass that ID in the next request.
+
+| You upload            | Endpoint                        | Form field                    | You get                               |
+| --------------------- | ------------------------------- | ----------------------------- | ------------------------------------- |
+| An image              | `POST /openapi/v2/image/upload` | `image` (file) or `image_url` | `Resp.img_id`                         |
+| A video or audio file | `POST /openapi/v2/media/upload` | `file` (file) or `file_url`   | `Resp.media_id` and `Resp.media_type` |
+
+You don't need to upload anything for text to video. To edit a video you generated with the API, pass its `video_id` as `source_video_id` instead of uploading it again (see [Pass the ID to the next request](#pass-the-id-to-the-next-request)).
+
+Both upload endpoints use `multipart/form-data`. Send the usual `API-KEY` and `Ai-trace-id` headers, but don't set `Content-Type` yourself: curl `-F`, Python `requests` with `files=`, and `fetch` with a `FormData` body set it, including the multipart boundary.
+
+## Upload an image
+
+`POST /openapi/v2/image/upload`
+
+Send the file as `image`, or a URL that PixVerse downloads it from as `image_url`. A URL must serve one of the image MIME types below; `application/octet-stream` isn't accepted. The image must meet these requirements:
+
+- **Format:** JPG, JPEG, PNG or WebP (`image/jpeg`, `image/jpg`, `image/png`, `image/webp`).
+- **File size:** less than 20 MB.
+- **Dimensions:** the longest side is at most 10,000 px.
+
+<CodeGroup>
+
+```bash cURL (file)
+curl -sS -X POST "https://app-api.pixverse.ai/openapi/v2/image/upload" \
+  -H "API-KEY: $PIXVERSE_API_KEY" \
+  -H "Ai-trace-id: $(uuidgen)" \
+  -F "image=@./input.jpg"
+```
+
+```bash cURL (URL)
+curl -sS -X POST "https://app-api.pixverse.ai/openapi/v2/image/upload" \
+  -H "API-KEY: $PIXVERSE_API_KEY" \
+  -H "Ai-trace-id: $(uuidgen)" \
+  -F "image_url=https://example.com/input.jpg"
+```
+
+</CodeGroup>
+
+A successful response returns the image ID and a URL for the stored copy:
+
+```json
+{
+  "ErrCode": 0,
+  "ErrMsg": "success",
+  "Resp": {
+    "img_id": 883671823,
+    "img_url": "https://media.pixverse.ai/openapi%2Ff4c512d1-0110-4360-8515-d84d788ca8d1test_image_auto.jpg"
+  }
+}
+```
+
+<Note>
+  **Images are moderated at upload.** An image that fails content moderation is
+  rejected by the upload call itself. The [Upload image API
+  reference](/api/upload-image) documents this failure as HTTP 500 with
+  lowercase keys (`err_code`, `err_msg`, `resp`) instead of `ErrCode`, `ErrMsg`,
+  `Resp`, and its example uses code `500052`, while the error code table lists
+  `500054` for images that fail moderation. Handle both shapes and both codes.
+</Note>
+
+## Upload a video or audio file
+
+`POST /openapi/v2/media/upload`
+
+Send the file as `file`, or a URL that PixVerse downloads it from as `file_url`. These formats are supported:
+
+| Type  | Formats (MIME types)                                                                                                                                     |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Video | MP4 (`video/mp4`), MOV (`video/mov`, `video/quicktime`), WebM (`video/webm`)                                                                             |
+| Audio | MP3 (`audio/mpeg`, `audio/mp4`), WAV (`audio/wav`, `audio/wave`, `audio/x-wav`, `audio/vnd.wave`), M4A (`audio/x-m4a`), AAC (`audio/aac`, `audio/x-aac`) |
+
+Videos can be at most 1920 px wide or high. Size and duration limits depend on the feature you upload for; see [Limits by feature](#limits-by-feature).
+
+<CodeGroup>
+
+```bash cURL (file)
+curl -sS -X POST "https://app-api.pixverse.ai/openapi/v2/media/upload" \
+  -H "API-KEY: $PIXVERSE_API_KEY" \
+  -H "Ai-trace-id: $(uuidgen)" \
+  -F "file=@./input.mp4"
+```
+
+```bash cURL (URL)
+curl -sS -X POST "https://app-api.pixverse.ai/openapi/v2/media/upload" \
+  -H "API-KEY: $PIXVERSE_API_KEY" \
+  -H "Ai-trace-id: $(uuidgen)" \
+  -F "file_url=https://example.com/input.mp4"
+```
+
+</CodeGroup>
+
+A successful response returns the media ID, whether the file is a `video` or `audio`, and a URL for the stored copy:
+
+```json
+{
+  "ErrCode": 0,
+  "ErrMsg": "success",
+  "Resp": {
+    "media_id": 416097137329803,
+    "media_type": "video",
+    "url": "https://media.pixverse.ai/openapi%2F90f96bd5-5b77-461c-9b8e-c0e40526c9ca.mp4"
+  }
+}
+```
+
+Check `media_type` before you use the ID: a `video` ID goes into a `video_media_id` field, and an `audio` ID goes into an `audio_media_id` field.
+
+## Upload from code
+
+<Tabs>
+<Tab title="Python">
+
+Requires `pip install requests`. Save as `upload.py` next to `input.jpg` and run `python upload.py`.
+
+```python
+import os, uuid
+import requests
+
+BASE = "https://app-api.pixverse.ai/openapi/v2"
+API_KEY = os.environ["PIXVERSE_API_KEY"]
+
+def upload(path, files):
+    # files= makes requests send multipart/form-data and set the boundary
+    headers = {"API-KEY": API_KEY, "Ai-trace-id": str(uuid.uuid4())}
+    r = requests.post(BASE + path, headers=headers, files=files, timeout=300)
+    data = r.json()
+    if data.get("ErrCode") != 0:
+        raise RuntimeError(f"Upload failed (HTTP {r.status_code}): {data}")
+    return data["Resp"]
+
+# Image from a local file: (filename, file, MIME type)
+with open("input.jpg", "rb") as f:
+    img_id = upload("/image/upload", {"image": ("input.jpg", f, "image/jpeg")})["img_id"]
+
+# Video from a URL. (None, value) sends a plain text field inside the multipart body.
+media = upload("/media/upload", {"file_url": (None, "https://example.com/input.mp4")})
+print(img_id, media["media_id"], media["media_type"])
+```
+
+</Tab>
+<Tab title="Node.js">
+
+Requires Node.js 18+. Save as `upload.mjs` next to `input.jpg` and run `node upload.mjs`.
+
+```js
+import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+
+const BASE = 'https://app-api.pixverse.ai/openapi/v2'
+const API_KEY = process.env.PIXVERSE_API_KEY
+
+async function upload(path, form) {
+  // fetch sets the multipart Content-Type and boundary from the FormData body
+  const res = await fetch(BASE + path, {
+    method: 'POST',
+    headers: { 'API-KEY': API_KEY, 'Ai-trace-id': randomUUID() },
+    body: form,
+  })
+  const data = await res.json()
+  if (data.ErrCode !== 0)
+    throw new Error(
+      `Upload failed (HTTP ${res.status}): ${JSON.stringify(data)}`,
+    )
+  return data.Resp
+}
+
+// Image from a local file
+const image = new FormData()
+image.append(
+  'image',
+  new Blob([await readFile('input.jpg')], { type: 'image/jpeg' }),
+  'input.jpg',
+)
+const { img_id } = await upload('/image/upload', image)
+
+// Video from a URL
+const video = new FormData()
+video.append('file_url', 'https://example.com/input.mp4')
+const { media_id, media_type } = await upload('/media/upload', video)
+console.log(img_id, media_id, media_type)
+```
+
+</Tab>
+</Tabs>
+
+## Limits by feature
+
+Every image you upload must meet the [image requirements](#upload-an-image). Videos and audio files must also stay within the limits of the feature you use them for:
+
+| Feature                                     | Upload          | Max file size   | Max duration  | Other requirements                                                    |
+| ------------------------------------------- | --------------- | --------------- | ------------- | --------------------------------------------------------------------- |
+| Any feature that takes an image             | Image           | Less than 20 MB | -             | JPG, PNG or WebP; longest side at most 10,000 px                      |
+| Extend                                      | Video           | 50 MB           | 30 s          |                                                                       |
+| Sound effects                               | Video           | 50 MB           | 30 s          |                                                                       |
+| Restyle                                     | Video           | 50 MB           | 30 s          |                                                                       |
+| Lip sync                                    | Video and audio | 250 MB each     | 300 s each    |                                                                       |
+| Generate swap video (and its mask)          | Video           | 100 MB          | 30 s          | Encoded as H.264 or H.265                                             |
+| [Modify](/api/modify)                       | Video           | 100 MB          | 30 s          |                                                                       |
+| Motion control                              | Video           | 100 MB          | 30 s          |                                                                       |
+| Upscale                                     | Video           | 100 MB          | 30 s          | At least 1 s                                                          |
+| Viral recreation agent                      | Video           | 100 MB          | 2 to 30 s     | Width and height between 640 and 1920 px; one video and 1 to 5 images |
+| Reference to video with V6 video references | Video           | Not documented  | 15 s in total | Up to 2 videos                                                        |
+| Custom voice                                | Audio           | -               | Under 30 s    |                                                                       |
+
+## Pass the ID to the next request
+
+Each ID goes into a specific field of the request that uses it:
+
+| ID                              | Request field                       | Used by                                                                                                                     |
+| ------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `img_id`                        | `img_id`                            | [Image to video](/api/image-to-video), [effect templates](/api/template-video), Generate swap video, Motion control, Avatar |
+| `img_id`                        | `first_frame_img`, `last_frame_img` | [First & last frame](/api/first-last-frame)                                                                                 |
+| `img_id`                        | `multi_transition[].img_id`         | Multi-keyframe                                                                                                              |
+| `img_id`                        | `image_references[].img_id`         | Reference to video                                                                                                          |
+| `img_id`                        | `img_ids` (array)                   | Multi-image [effect templates](/api/template-video), [Modify](/api/modify) reference images, Image templates                |
+| `img_id`                        | `img_references[].img_id`           | Viral recreation and Real estate                                                                                            |
+| `media_id` (video)              | `video_media_id`                    | Extend, [Modify](/api/modify), Restyle, Generate swap video and its mask, Motion control, Upscale, Sound effects, Lip sync  |
+| `media_id` (video)              | `video_references[].video_media_id` | Reference to video with V6, Viral recreation                                                                                |
+| `media_id` (audio)              | `audio_media_id`                    | Lip sync, Avatar, custom voices                                                                                             |
+| `video_id` from an earlier task | `source_video_id`                   | Any endpoint above that takes `video_media_id`, in its place                                                                |
+
+Send either `source_video_id` or `video_media_id`, not both.
+
+For example, after uploading an image, an image-to-video request passes the ID like this:
+
+```json
+{
+  "model": "v6",
+  "img_id": 883671823,
+  "prompt": "The subject slowly turns toward the camera and smiles",
+  "duration": 5,
+  "quality": "540p"
+}
+```
+
+Most ID fields are integers. A few endpoints type them as strings, for example `video_media_id` and `source_video_id` on Upscale, the IDs inside `video_references` on Reference to video, `img_ids` on Image templates, and `avatar` (an image ID or `Auto`) on the Real estate agent. Check the endpoint's API reference for the type it expects.
+
+## Upload errors
+
+An image upload fails when the image is too large (`500030`), can't be read (`500031`), has an unsupported format (`500032`) or invalid dimensions (`500033`), fails to upload (`500041`), or has an invalid path (`500042`). A later request that uses an invalid image ID returns `400032`. Read the error response before retrying. Image moderation failures may use `500052` or `500054`, as described above.
+
+## API reference
+
+- [Upload image](/api/upload-image) — `POST /openapi/v2/image/upload`.
+- Upload video or audio — `POST /openapi/v2/media/upload`.

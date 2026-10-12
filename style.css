@@ -1,0 +1,92 @@
+/* Docs palette comes from app-docs/DESIGN-SPEC.md, separate from Platform UI. */
+:root {
+  --sidebar-width: 268px;
+  --content-width: 720px;
+  --pv-docs-text: #24232b;
+  --pv-docs-body: #514b5a;
+  --pv-docs-nav: #585261;
+  --pv-docs-primary: #7750d8;
+  --pv-docs-border: #eeedf2;
+  --pv-docs-tint: #f2edfc;
+  --pv-docs-glow: #faf7ff;
+  --pv-docs-code: #fcfbfd;
+  --pv-docs-scrollbar: #bdb7c8;
+}
+
+.dark {
+  --pv-docs-text: #edebf2;
+  --pv-docs-body: #d8d4e0;
+  --pv-docs-nav: #c5c0ce;
+  --pv-docs-primary: #9d85f0;
+  --pv-docs-border: #2a2833;
+  --pv-docs-tint: rgba(157, 133, 240, 0.2);
+  --pv-docs-glow: rgba(157, 133, 240, 0.09);
+  --pv-docs-code: #121117;
+  --pv-docs-scrollbar: #514b60;
+}
+
+body {
+  color: var(--pv-docs-text);
+  background-image: radial-gradient(
+    ellipse 600px 260px at 65% 112px,
+    var(--pv-docs-glow),
+    transparent
+  );
+  background-attachment: fixed;
+}
+
+#content-area {
+  color: var(--pv-docs-body);
+}
+
+#page-title,
+#content-area :is(h2, h3, h4) {
+  color: var(--pv-docs-text);
+}
+
+#page-title {
+  font-size: 28px;
+  line-height: 1.3;
+}
+
+#sidebar-content a {
+  color: var(--pv-docs-nav);
+  border-radius: 6px;
+}
+
+#sidebar-content :is(a, button):focus-visible {
+  outline: 2px solid var(--pv-docs-primary);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+#sidebar-content a[aria-current='page'] {
+  color: var(--pv-docs-primary);
+  background: var(--pv-docs-tint);
+  font-weight: 600;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pv-docs-scrollbar) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--pv-docs-scrollbar);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

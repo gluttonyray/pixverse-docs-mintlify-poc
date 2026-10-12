@@ -1,0 +1,364 @@
+/* Docs prototype palette from app-docs/DESIGN-SPEC.md; isolated experiment tokens. */
+.guided-request {
+  --guided-background: #ffffff;
+  --guided-foreground: #24232b;
+  --guided-muted: #595766;
+  --guided-primary: #7750d8;
+  --guided-primary-text: #ffffff;
+  --guided-tint: #f2edfc;
+  --guided-border: #e6e3ed;
+  --guided-surface: #f8f7fa;
+  --guided-code: #fcfbfd;
+  --guided-error: #bc2828;
+  --guided-overlay: rgba(37, 28, 59, 0.27);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: var(--guided-foreground);
+}
+.dark .guided-request {
+  --guided-background: #0f0e13;
+  --guided-foreground: #edebf2;
+  --guided-muted: #c1bdcb;
+  --guided-primary: #9d85f0;
+  --guided-primary-text: #0f0e13;
+  --guided-tint: rgba(157, 133, 240, 0.2);
+  --guided-border: #2a2833;
+  --guided-surface: #17161d;
+  --guided-code: #121117;
+  --guided-error: #e5534b;
+}
+.guided-request *,
+.guided-request *::before,
+.guided-request *::after {
+  box-sizing: border-box;
+}
+.guided-request button,
+.guided-request input,
+.guided-request textarea {
+  font: inherit;
+}
+.guided-request button {
+  cursor: pointer;
+}
+.guided-request button:focus-visible,
+.guided-request input:focus-visible,
+.guided-request textarea:focus-visible {
+  outline: 2px solid var(--guided-primary);
+  outline-offset: 2px;
+}
+.guided-request code,
+.guided-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.guided-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: space-between;
+  border: 1px solid var(--guided-border);
+  background: var(--guided-code);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+.guided-endpoint code {
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.guided-method {
+  color: var(--guided-primary);
+  font-weight: 700;
+  margin-right: 12px;
+}
+.guided-primary {
+  border: 0;
+  border-radius: 8px;
+  background: var(--guided-primary);
+  color: var(--guided-primary-text);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.guided-primary:hover {
+  filter: brightness(0.95);
+}
+.guided-dialog {
+  width: min(1400px, calc(100vw - 64px));
+  max-width: none;
+  max-height: calc(100dvh - 64px);
+  padding: 0;
+  border: 1px solid var(--guided-border);
+  border-radius: 20px;
+  background: var(--guided-background);
+  color: var(--guided-foreground);
+  overflow: hidden;
+  margin: auto;
+}
+.guided-dialog::backdrop {
+  background: var(--guided-overlay);
+  backdrop-filter: blur(4px);
+}
+.guided-dialog-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 66px);
+}
+.guided-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--guided-border);
+  flex-shrink: 0;
+}
+.guided-dialog-header h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: var(--guided-foreground);
+}
+.guided-dialog-header p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--guided-muted);
+}
+.guided-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  color: var(--guided-muted);
+  border: 0;
+  border-radius: 8px;
+  font-size: 26px !important;
+  line-height: 1;
+}
+.guided-close:hover {
+  background: var(--guided-tint);
+  color: var(--guided-foreground);
+}
+.guided-dialog form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+}
+.guided-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--guided-border);
+  flex-shrink: 0;
+}
+.guided-text-button {
+  background: transparent;
+  border: 0;
+  padding: 8px 0;
+  color: var(--guided-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.guided-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  min-height: 0;
+  overflow: auto;
+}
+.guided-form-panel {
+  padding: 4px 28px 12px;
+  min-width: 0;
+}
+.guided-field {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--guided-border);
+}
+.guided-field:last-child {
+  border-bottom: 0;
+}
+.guided-field > label {
+  align-self: start;
+  padding-top: 12px;
+  font-size: 13px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.guided-field > label code {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.guided-required {
+  color: var(--guided-error);
+}
+.guided-control {
+  min-width: 0;
+}
+.guided-input {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 12px;
+  border: 1px solid var(--guided-border);
+  border-radius: 8px;
+  background: var(--guided-background);
+  color: var(--guided-foreground);
+  font-size: 14px !important;
+  line-height: 22px;
+}
+.guided-input[aria-invalid='true'],
+.guided-editor[aria-invalid='true'] {
+  border-color: var(--guided-error);
+}
+.guided-prompt {
+  min-height: 94px;
+  resize: vertical;
+}
+.guided-hint,
+.guided-error {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--guided-muted);
+}
+.guided-error {
+  color: var(--guided-error);
+}
+.guided-select {
+  position: relative;
+}
+.guided-select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.guided-options {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--guided-border);
+  border-radius: 10px;
+  background: var(--guided-background);
+  box-shadow: 0 8px 24px var(--guided-overlay);
+}
+.guided-options.opens-above {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.guided-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.guided-option.is-active {
+  background: var(--guided-tint);
+  color: var(--guided-primary);
+}
+.guided-preview-panel {
+  min-width: 0;
+  padding: 24px 28px;
+  background: var(--guided-surface);
+}
+.guided-code-header {
+  padding: 12px 16px;
+  border: 1px solid var(--guided-border);
+  border-radius: 12px 12px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--guided-surface);
+}
+.guided-code {
+  margin: 0;
+  padding: 20px;
+  max-height: 580px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.7;
+  border: 1px solid var(--guided-border);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: var(--guided-code);
+  color: var(--guided-foreground);
+}
+.guided-code code {
+  color: inherit;
+}
+.guided-preview-note {
+  margin: 16px 0 0;
+  color: var(--guided-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.guided-editor-panel {
+  padding: 20px 0;
+}
+.guided-editor-panel > label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.guided-editor {
+  width: 100%;
+  height: clamp(320px, calc(100dvh - 340px), 680px);
+  resize: vertical;
+  padding: 16px;
+  border: 1px solid var(--guided-border);
+  border-radius: 12px;
+  background: var(--guided-code);
+  color: var(--guided-foreground);
+  font-size: 13px !important;
+  line-height: 1.7;
+}
+.guided-error-list {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--guided-error);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.guided-status {
+  padding: 14px 28px;
+  border-top: 1px solid var(--guided-border);
+  color: var(--guided-muted);
+  font-size: 12px;
+  line-height: 1.7;
+  flex-shrink: 0;
+}
+.guided-request * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--guided-border) transparent;
+}
+@media (max-width: 1100px) {
+  .guided-field {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .guided-field > label {
+    padding-top: 0;
+  }
+}

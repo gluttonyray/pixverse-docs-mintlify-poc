@@ -1,0 +1,18 @@
+---
+title: Template video
+description: Apply an effect template to uploaded images to generate a video.
+openapi: "openapi/pixverse-template-poc.yaml POST /openapi/v2/video/img/generate"
+---
+
+Find an activated `template_id` and its input requirements in
+[List templates](/api/list-templates). Upload the required images using
+[Upload image](/api/upload-image), then send the template request.
+
+The request returns a `video_id`; use
+[Get video task status](/api/video-task-status) to get the result.
+Use the input requirements returned by [List templates](/api/list-templates)
+to prepare the request.
+
+This page binds the template-specific specification explicitly. It shares the
+API path with [Image to video](/api/image-to-video) while retaining its own
+parameters and request example.

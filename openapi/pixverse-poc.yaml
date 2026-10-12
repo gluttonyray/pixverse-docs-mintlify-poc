@@ -1,0 +1,737 @@
+# Seeded from app-docs OpenAPI for this experiment.
+# This file is editable; startup does not regenerate it.
+# OpenAPI 3.0 schema examples arrays normalized to singular example.
+openapi: 3.0.1
+info:
+  title: PixVerse Platform API
+  description: Generate and edit AI videos with PixVerse models. All requests are
+    authenticated with the `API-KEY` header and need a unique `Ai-trace-id`.
+  version: 2.0.0
+servers:
+  - url: https://app-api.pixverse.ai
+    description: Production
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: media
+    x-displayName: Media
+  - name: tasks
+    x-displayName: Tasks
+  - name: video-generation
+    x-displayName: Video generation
+  - name: video-editing
+    x-displayName: Video editing
+  - name: catalog
+    x-displayName: Catalog
+paths:
+  /openapi/v2/image/upload:
+    post:
+      summary: Upload image
+      deprecated: false
+      description: >-
+        Uploads an image to the server. 
+
+        Image requirements
+
+        1. maximum dimensions 10000 pixels
+
+        2. file size less than 20MB
+
+        3. Supported formats: "png", "webp", "jpeg", "jpg" . supported mime-type
+        "image/jpeg","image/jpg","image/png","image/webp"
+      tags:
+        - media
+      parameters:
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  format: binary
+                  type: string
+                  description: Either image or image_url is required.
+                  example: ""
+                image_url:
+                  description: image file from url, application/octet-stream is not
+                    supported.Either image or image_url is required. supported
+                    mime-type "image/jpeg","image/jpg","image/png","image/webp"
+                  example: https://media.pixverse.ai/openapi%2Ff4c512d1-0110-4360-8515-d84d788ca8d1test_image_auto.jpg
+                  type: string
+            examples: {}
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      ErrCode:
+                        type: integer
+                      ErrMsg:
+                        type: string
+                      Resp:
+                        $ref: "#/components/schemas/dto.UploadImgResp"
+          headers: {}
+        "500":
+          description: Content moderation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/dto.ResponseData500"
+          headers: {}
+      operationId: upload-image
+  /openapi/v2/video/transition/generate:
+    post:
+      summary: First & last frame
+      deprecated: false
+      description: Transition(First-last frame) generation
+      tags:
+        - video-generation
+      parameters:
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  description: Prompt <= 5000 characters
+                model:
+                  type: string
+                  description: Model version (now supports v3.5/v4/v4.5/v5/v5.5/v5.6/v6/c1)
+                duration:
+                  type: integer
+                  description: |-
+                    Video duration
+                    v.3.5/v4/v4.5 : 5/8 (v3.5 1080p cannot use 8)
+                    v5 : 5/8
+                    v5.5/v5.6 : 5/8/10 (1080p cannot use 10)
+                    v6/c1 : 1~15 
+                quality:
+                  type: string
+                  description: Video quality ("360p", "540p", "720p", "1080p")
+                seed:
+                  type: integer
+                  description: "Random seed, range: 0 - 2147483647"
+                first_frame_img:
+                  type: integer
+                  description: Image ID from Upload image API
+                last_frame_img:
+                  type: integer
+                  description: Image ID from Upload image API
+                generate_audio_switch:
+                  type: boolean
+                  description: "Supported in v5.5/5.6/v6/c1 models. Audio switch. Controls whether
+                    the video has audio. **true**: Audio on , **false**: Audio
+                    off . **default value** : false"
+                sound_effect_switch:
+                  type: string
+                  description: Supported in v5 and below. Or with template_id. Set to true if you
+                    want to enable this feature. Default is false.
+                    (v3.5/v4/v4.5/v5)
+                sound_effect_content:
+                  type: string
+                  description: Supported in v5 models and below. Activated when
+                    sound_effect_switch=true, Describe the sound effect you
+                    want. Leave blank for auto generation.
+                lip_sync_tts_switch:
+                  type: string
+                  description: Supported in v5 models and below. Set to true if you want to enable
+                    this feature. Default is false.
+                lip_sync_tts_content:
+                  type: string
+                  description: Supported in v5 models and below. ~140 (UTF-8) characters
+                lip_sync_tts_speaker_id:
+                  type: string
+                  description: Supported in v5 models and below. id from Get speech tts list
+                    (v3.5/v4/v4.5/v5)
+              required:
+                - prompt
+                - model
+                - duration
+                - quality
+                - first_frame_img
+                - last_frame_img
+            example:
+              prompt: transform into a puppy
+              model: v6
+              duration: 5
+              quality: 540p
+              first_frame_img: 0
+              last_frame_img: 0
+              seed: 0
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/controller.ResponseData"
+          headers: {}
+      operationId: first-last-frame
+  /openapi/v2/video/img/generate:
+    post:
+      summary: Image to video
+      deprecated: false
+      description: |
+        Image-to-Video generation
+      tags:
+        - video-generation
+      parameters:
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  description: |-
+                    Video duration
+                    v.3.5/v4/v4.5 : 5/8 (v3.5 1080p cannot use 8)
+                    v5 : 5/8
+                    v5.5/v5.6 : 5/8/10 (1080p cannot use 10)
+                    v6/c1 : 1~15 
+                  type: integer
+                  example: 5
+                img_id:
+                  type: integer
+                  description: Image ID from Upload image API. single image or single-image
+                    templates
+                  format: uint64
+                model:
+                  description: Model version (now supports v3.5/v4/v4.5/v5/v5.5/v5.6/v6/c1)
+                  type: string
+                  example: v3.5
+                prompt:
+                  type: string
+                  description: Prompt <= 5000 characters
+                  maxLength: 5000
+                quality:
+                  description: Video quality ("360p", "540p", "720p", "1080p")
+                  type: string
+                  example: 540p
+                seed:
+                  description: "Random seed, range: 0 - 2147483647"
+                  type: integer
+                template_id:
+                  description: Template ID (template_id must be activated before use)
+                  type: integer
+                  example: 302325299692608
+                generate_audio_switch:
+                  type: boolean
+                  description: "Supported in v5.5/5.6/v6/c1 models. Audio switch. Controls whether
+                    the video has audio. **true**: Audio on , **false**: Audio
+                    off . **default value** : false"
+                generate_multi_clip_switch:
+                  type: boolean
+                  description: "Supported in v5.5/v6 model. Single or multi-clip switch. controls
+                    single-clip and multi-clip generation modes. **true**:
+                    Multi-clip , **false**: Single-clip.  **default value** :
+                    false"
+                sound_effect_switch:
+                  type: boolean
+                  description: "Supported in v5 and below. Or with template_id. Set to true if you
+                    want to enable this feature. Default is false. "
+                sound_effect_content:
+                  type: string
+                  description: Supported in v5 models and below. Activated when
+                    sound_effect_switch=true, Describe the sound effect you
+                    want. Leave blank for auto generation.
+                lip_sync_tts_switch:
+                  type: boolean
+                  description: Supported in v5 models and below. Set to true if you want to enable
+                    this feature. Default is false.
+                lip_sync_tts_content:
+                  type: string
+                  description: Supported in v5 models and below. ~140 (UTF-8) characters
+                lip_sync_tts_speaker_id:
+                  type: string
+                  description: Supported in v5 models and below. id from Get speech tts list
+                    (v3.5/v4/v4.5/v5)
+              required:
+                - duration
+                - img_id
+                - model
+                - prompt
+                - quality
+            example:
+              duration: 5
+              img_id: 0
+              model: v6
+              prompt: string
+              quality: 720p
+              seed: 0
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/controller.ResponseData"
+          headers: {}
+      operationId: image-to-video
+  /openapi/v2/video/modify/generate:
+    post:
+      summary: Modify video
+      deprecated: false
+      description: ""
+      tags:
+        - video-editing
+      parameters:
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                video_media_id:
+                  type: integer
+                  description: media_id from uploaded video, one of source_video_id or
+                    video_media_id should be provided
+                img_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Image ID from Upload image API
+                prompt:
+                  type: string
+                  description: The prompt describing the modification you want to make. |  |  When
+                    using specific features, please note that if a mask is used
+                    in the prompt, it should be referenced as @selection0. For
+                    multiple masks, use @selection1, @selection2. If reference
+                    images are uploaded, use @img0, @img1, etc.
+                mask_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: |-
+                    mask_id from swap mask endpoint
+                    up to 3 items
+                keyframe_id:
+                  type: integer
+                  description: Specifies which frame of the video is used for swap features in
+                    modify
+                quality:
+                  type: string
+                  description: '"360p","540p","720p"'
+                source_video_id:
+                  type: integer
+                  description: video_id from generation, one of source_video_id or video_media_id
+                    should be provided
+                maks_urls:
+                  type: array
+                  items:
+                    type: string
+                  description: maks file url from user. up to 3 items
+              required:
+                - prompt
+                - quality
+              description: Provide either source_video_id or video_media_id, not both.
+              oneOf:
+                - required:
+                    - source_video_id
+                - required:
+                    - video_media_id
+            example:
+              video_media_id: 1234
+              prompt: "@selection0 subject is swapped with @img0"
+              img_ids:
+                - 123
+              mask_ids:
+                - "3847593904"
+              keyframe_id: 1
+              quality: 540p
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ErrCode:
+                    type: integer
+                  ErrMsg:
+                    type: string
+                  Resp:
+                    type: object
+                    properties:
+                      video_id:
+                        type: integer
+                      credit:
+                        type: integer
+                    required:
+                      - video_id
+                      - credit
+                required:
+                  - ErrCode
+                  - ErrMsg
+                  - Resp
+              example:
+                ErrCode: 0
+                ErrMsg: Success
+                Resp:
+                  video_id: 0
+                  credit: 0
+          headers: {}
+      operationId: modify
+  /openapi/v2/video/result/{id}:
+    get:
+      summary: Get video status
+      deprecated: false
+      description: "1: Generation successful; 5: Generating; 7: Contents moderation
+        failed; 8: Generation failed;"
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          description: video_id from generation task
+          required: true
+          example: 0
+          schema:
+            type: integer
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      ErrCode:
+                        type: integer
+                      ErrMsg:
+                        type: string
+                      Resp:
+                        $ref: "#/components/schemas/dto.GetOpenapiMediaDetailResp"
+          headers: {}
+      operationId: get-video-status
+  /openapi/v2/video/effects/templates/list:
+    get:
+      summary: List templates
+      deprecated: false
+      description: ""
+      tags:
+        - catalog
+      parameters:
+        - name: type
+          in: query
+          description: Template type. 1 for video templates, 2 for image templates. If
+            omitted, all templates are returned
+          required: false
+          example: "1"
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number. Defaults to 1
+          required: false
+          example: "1"
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          description: >+
+            Number of items per page. Defaults to 50.supports 10, 20, 50, 100.
+            Any other value results in a parameter error
+
+          required: false
+          example: "50"
+          schema:
+            type: string
+        - name: template_ids
+          in: query
+          description: Supports bulk parameter entry, with individual values separated by
+            commas.
+          required: false
+          example: "402331965264704"
+          schema:
+            type: string
+        - name: Ai-trace-id
+          in: header
+          description: A new UUID for every request. Reusing a trace ID does not start a
+            new generation. The all-zero example is a placeholder only. Generate
+            a fresh UUID before sending; do not reuse this example.
+          required: true
+          example: 00000000-0000-4000-8000-000000000000
+          schema:
+            type: string
+            format: uuid
+        - name: Accept-Language
+          in: header
+          description: Language identifier. If provided, the API looks up multilingual
+            template configuration based on the language order in the header. If
+            a matching language exists in api_template_tab.i18n_json,
+            display_name and display_prompt will preferentially return the
+            localized values. Otherwise, default values are returned
+          required: false
+          example: zh-CN, en
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success. Check `ErrCode` in the body: 0 means the request
+            succeeded."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ErrCode:
+                    type: integer
+                  ErrMsg:
+                    type: string
+                  Resp:
+                    type: object
+                    properties:
+                      effect_items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            template_id:
+                              type: integer
+                              description: Can be passed as template_id in generation APIs
+                            display_name:
+                              type: string
+                              description: Display name of the template. If Accept-Language is provided and a
+                                matching localization exists, the localized
+                                value is returned first
+                            display_prompt:
+                              type: string
+                              description: Used for template display. If Accept-Language is provided and a
+                                matching localization exists, the localized
+                                value is returned first
+                            thumbnail_video_url:
+                              type: string
+                              description: Template preview video
+                            qualities:
+                              type: array
+                              items:
+                                type: string
+                              description: Supported output resolutions
+                            effect_type:
+                              type: string
+                              description: |
+                                Number of input images required by the template
+                            effect_length:
+                              type: array
+                              items:
+                                type: integer
+                              description: >
+                                Fixed-duration templates return a fixed value;
+                                non-fixed-duration templates return values based
+                                on current rules
+                            topic_requirements:
+                              type: string
+                              description: |
+                                Requirements for input assets
+                            type:
+                              type: integer
+                              description: 1 for video templates, 2 for image templates
+                            create_at:
+                              type: string
+                              description: Returned in descending order by creation time
+                            credit_consume:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  consume_desc_key:
+                                    type: string
+                                    description: Billing dimension
+                                  credit:
+                                    type: string
+                                    description: |
+                                      Number of credits consumed
+                                required:
+                                  - consume_desc_key
+                                  - credit
+                              description: Credit consumption for different resolutions
+                    required:
+                      - effect_items
+                required:
+                  - ErrCode
+                  - ErrMsg
+                  - Resp
+              example:
+                ErrCode: 0
+                ErrMsg: Success
+                Resp:
+                  effect_items:
+                    - template_id: 402331965264704
+                      display_name: Audience Reaction Shot
+                      display_prompt: Generate a cinematic audience reaction shot.
+                      thumbnail_video_url: https://media.pixverse.ai/asset%2Ftemplate%2Fstands_cam_capture.mp4
+                      qualities:
+                        - 360p
+                        - 540p
+                        - 720p
+                        - 1080p
+                      effect_type: "1"
+                      effect_length:
+                        - 8
+                      topic_requirements: |-
+                        Subject type: person
+                        Recommended subject count: 1-2
+                      type: 1
+                      create_at: 2026-06-11 14:43:28
+                      credit_consume:
+                        - consume_desc_key: 360p
+                          credit: "55"
+                        - consume_desc_key: 540p
+                          credit: "78"
+                        - consume_desc_key: 720p
+                          credit: "100"
+                        - consume_desc_key: 1080p
+                          credit: "190"
+          headers: {}
+      operationId: list-templates
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: API-KEY
+      description: Your API key from the API Key page of the PixVerse Platform. Send
+        it as-is, without a Bearer prefix.
+  schemas:
+    dto.UploadImgResp:
+      type: object
+      properties:
+        img_id:
+          type: integer
+        img_url:
+          type: string
+    dto.ResponseData500:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          example: 500052
+        err_msg:
+          type: string
+          example: The image failed content moderation. Please change it and try again.
+        resp:
+          type: string
+    controller.ResponseData:
+      type: object
+      properties:
+        ErrCode:
+          type: integer
+        ErrMsg:
+          type: string
+        Resp:
+          $ref: "#/components/schemas/dto.V2OpenAPII2VResp"
+    dto.GetOpenapiMediaDetailResp:
+      type: object
+      properties:
+        create_time:
+          description: create_time
+          type: string
+        id:
+          type: integer
+          description: video_id
+        modify_time:
+          description: update_time
+          type: string
+        negative_prompt:
+          description: negative Prompt
+          type: string
+        outputHeight:
+          description: height of video
+          type: integer
+        outputWidth:
+          description: width of video
+          type: integer
+        prompt:
+          description: prompt
+          type: string
+        resolution_ratio:
+          description: video_quality
+          type: integer
+        seed:
+          description: seed
+          type: integer
+        size:
+          description: video size
+          type: integer
+        status:
+          description: "video status: Generation succesful = 1; Generating=5; Deleted = 6;
+            Contents moderation failed = 7; Generation failed= 8;"
+          type: integer
+        style:
+          description: style
+          type: string
+        url:
+          description: video result
+          type: string
+    dto.V2OpenAPII2VResp:
+      type: object
+      properties:
+        video_id:
+          description: Video_id
+          type: integer

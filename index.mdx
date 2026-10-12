@@ -1,0 +1,81 @@
+---
+title: Introduction
+description: Explore what you can build with the PixVerse API and where to begin.
+---
+
+Use the PixVerse API to generate and edit video, add sound and speech, create avatars, and generate images from templates. Choose a workflow below for a guide that takes you through the request.
+
+## Start here
+
+<Columns cols={2}>
+  <Card title="Quick Start" href="/quickstart">
+    Sign in, create an API key, and download your first video.
+  </Card>
+  <Card title="Upload media" href="/shared-apis/upload-media">
+    Upload images, video and audio for your requests.
+  </Card>
+  <Card title="Pricing" href="/pricing/index">
+    Check API credits and costs before running a request.
+  </Card>
+  <Card title="Release notes" href="/release-notes/index">
+    Review new features, models and documentation updates.
+  </Card>
+</Columns>
+
+<Note>
+  API credits are separate from the PixVerse web app. New accounts start with no
+  API credits; subscribe to an [API plan](/pricing/index) before you make your
+  first call.
+</Note>
+
+## How video generation works
+
+<Steps>
+
+  <Step title="Submit a request">
+
+    Send a prompt, image, or other input to the endpoint for your workflow. The response gives you a task ID while generation continues in the background.
+
+  </Step>
+  <Step title="Check the task">
+
+    Poll [Get video task status](/api/video-task-status) with the ID, or set up a webhook to be notified when the task finishes.
+
+  </Step>
+  <Step title="Save the result">
+
+    When the task succeeds, read the result URL and download the finished video. [Quick Start](/quickstart) includes a script that runs all three steps.
+
+  </Step>
+</Steps>
+
+## Create video
+
+<Columns cols={2}>
+  <Card title="Image to video" href="/api/image-to-video">
+    Animate an image with a prompt.
+  </Card>
+  <Card title="First and last frame" href="/guides/first-last-frame">
+    Create a video between two images.
+  </Card>
+  <Card title="Template video" href="/api/template-video">
+    Create a video from images with an effect template.
+  </Card>
+  <Card title="List templates" href="/api/list-templates">
+    Find templates for your request.
+  </Card>
+</Columns>
+
+Other generation workflows include text to video, multi-keyframe transitions and reference to video.
+
+## Edit video
+
+<Card title="Modify" href="/api/modify">
+  Edit a video with a text prompt.
+</Card>
+
+Editing workflows also include Extend, Restyle, Swap, Motion control and Upscale.
+
+## Audio, avatars, agents and images
+
+Add sound effects to video, match a character's mouth movement to speech, manage voices, or turn a portrait into a talking video. Agent workflows recreate viral videos with your assets or make a real estate video from a listing. Image templates generate images from a template and your photos.

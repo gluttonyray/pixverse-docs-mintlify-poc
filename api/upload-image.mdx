@@ -1,0 +1,13 @@
+---
+title: Upload image
+description: Upload an image and get the ID used by generation endpoints.
+openapi: "openapi/pixverse-poc.yaml POST /openapi/v2/image/upload"
+---
+
+Upload a file or image URL and get an `img_id` to use in generation requests.
+For file limits and examples, see [Upload media](/shared-apis/upload-media).
+
+<Note>
+  Use a fresh UUID for `Ai-trace-id` on each request. The all-zero UUID in the
+  generated example is a placeholder.
+</Note>
