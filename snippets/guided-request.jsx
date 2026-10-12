@@ -12,7 +12,7 @@ export const GuidedSelect = ({ name, value, options, onChange, invalid }) => {
   useEffect(() => {
     if (!open) return
     const bounds = wrapper.current.getBoundingClientRect()
-    const scrollArea = wrapper.current.closest('.guided-columns')
+    const scrollArea = wrapper.current.closest('.guided-form-panel')
     const area = scrollArea.getBoundingClientRect()
     const below = area.bottom - bounds.bottom - 12
     const above = bounds.top - area.top - 12
@@ -133,15 +133,23 @@ export const GuidedSelect = ({ name, value, options, onChange, invalid }) => {
   )
 }
 
-export const GuidedField = ({ name, required, children, error, hint }) => (
+export const GuidedField = ({
+  name,
+  type = 'string',
+  required,
+  children,
+  error,
+}) => (
   <div className="guided-field">
     <label htmlFor={`guided-field-${name}`}>
-      <code>{name}</code>
-      {required && <span className="guided-required"> *</span>}
+      <span className="guided-field-name">
+        {name}
+        {required && <span className="guided-required"> *</span>}
+      </span>
+      <code>{type}</code>
     </label>
     <div className="guided-control">
       {children}
-      {hint && <p className="guided-hint">{hint}</p>}
       {error && (
         <p id={`guided-error-${name}`} className="guided-error">
           {error}
@@ -485,12 +493,22 @@ export const GuidedFirstLastFrame = () => {
       >
         <div className="guided-dialog-shell">
           <header className="guided-dialog-header">
-            <div>
+            <div className="guided-dialog-title">
+              <span className="guided-dialog-method">POST</span>
               <h2 id="guided-title">First &amp; last frame</h2>
-              <p id="guided-description">
-                Local request preview. No API key or paid generation is needed.
-              </p>
             </div>
+            <code className="guided-dialog-path">
+              <span>POST</span> /openapi/v2/video/transition/generate
+            </code>
+            {opened && (
+              <button
+                type="submit"
+                form="guided-request-form"
+                className="guided-primary"
+              >
+                Preview request
+              </button>
+            )}
             <button
               type="button"
               className="guided-close"
@@ -501,154 +519,169 @@ export const GuidedFirstLastFrame = () => {
             </button>
           </header>
           {opened && (
-            <form onSubmit={preview}>
-              <div className="guided-toolbar">
-                <button
-                  type="button"
-                  className="guided-text-button"
-                  onClick={toggleMode}
-                >
-                  {mode === 'form' ? 'Open JSON Editor' : 'Use form'}
-                </button>
-                <button type="submit" className="guided-primary">
-                  Preview request
-                </button>
-              </div>
+            <form id="guided-request-form" onSubmit={preview}>
               <div className="guided-columns">
                 <section
                   className="guided-form-panel"
                   aria-label="Request parameters"
                 >
-                  {mode === 'json' ? (
-                    <div className="guided-editor-panel">
-                      <label htmlFor="guided-json">Request body JSON</label>
-                      <textarea
-                        id="guided-json"
-                        className="guided-editor"
-                        value={draft}
-                        spellCheck={false}
-                        aria-invalid={errors.length > 0}
-                        aria-describedby={
-                          errors.length ? 'guided-json-errors' : undefined
-                        }
-                        onChange={(event) => editJSON(event.target.value)}
-                      />
-                      {errors.length > 0 && (
-                        <ul
-                          id="guided-json-errors"
-                          className="guided-error-list"
-                        >
-                          {errors.map((error, index) => (
-                            <li key={`${error.field}-${index}`}>
-                              <code>{error.field}</code>: {error.message}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                  <div className="guided-form-intro">
+                    <h3>Configure request</h3>
+                    <p id="guided-description">
+                      Local preview only. No API request is sent.
+                    </p>
+                  </div>
+                  <div className="guided-body">
+                    <div className="guided-body-header">
+                      <h3>Body</h3>
+                      <button
+                        type="button"
+                        className="guided-text-button"
+                        onClick={toggleMode}
+                      >
+                        {mode === 'form'
+                          ? 'Open JSON Editor'
+                          : 'Close JSON Editor'}
+                      </button>
                     </div>
-                  ) : (
-                    <div className="guided-fields">
-                      <GuidedField
-                        name="prompt"
-                        required
-                        error={fieldError('prompt')}
-                      >
+                    {mode === 'json' ? (
+                      <div className="guided-editor-panel">
+                        <label
+                          htmlFor="guided-json"
+                          className="guided-visually-hidden"
+                        >
+                          Request body JSON
+                        </label>
                         <textarea
-                          id="guided-field-prompt"
-                          className="guided-input guided-prompt"
-                          value={body.prompt ?? ''}
-                          onChange={(event) =>
-                            update('prompt', event.target.value)
-                          }
-                          aria-invalid={
-                            Boolean(fieldError('prompt')) || undefined
-                          }
+                          id="guided-json"
+                          className="guided-editor"
+                          value={draft}
+                          spellCheck={false}
+                          aria-invalid={errors.length > 0}
                           aria-describedby={
-                            fieldError('prompt')
-                              ? 'guided-error-prompt'
-                              : undefined
+                            errors.length ? 'guided-json-errors' : undefined
                           }
+                          onChange={(event) => editJSON(event.target.value)}
                         />
-                      </GuidedField>
-                      <GuidedField
-                        name="model"
-                        required
-                        error={fieldError('model')}
-                      >
-                        {select(
-                          'model',
-                          FRAME_MODELS.map((model) => ({
-                            value: model,
-                            label: model,
-                          })),
-                          changeModel,
+                        {errors.length > 0 && (
+                          <ul
+                            id="guided-json-errors"
+                            className="guided-error-list"
+                          >
+                            {errors.map((error, index) => (
+                              <li key={`${error.field}-${index}`}>
+                                <code>{error.field}</code>: {error.message}
+                              </li>
+                            ))}
+                          </ul>
                         )}
-                      </GuidedField>
-                      <GuidedField
-                        name="quality"
-                        required
-                        error={fieldError('quality')}
-                      >
-                        {select(
-                          'quality',
-                          FRAME_QUALITIES.map((quality) => ({
-                            value: quality,
-                            label: quality,
-                          })),
-                        )}
-                      </GuidedField>
-                      <GuidedField
-                        name="duration"
-                        required
-                        error={fieldError('duration')}
-                        hint="Options follow model and quality. Unsupported values are kept until you choose another."
-                      >
-                        {select(
-                          'duration',
-                          frameDurationOptions(body.model, body.quality).map(
-                            (duration) => ({
-                              value: duration,
-                              label: `${duration} s`,
-                            }),
+                      </div>
+                    ) : (
+                      <div className="guided-fields">
+                        <GuidedField
+                          name="prompt"
+                          required
+                          error={fieldError('prompt')}
+                        >
+                          <textarea
+                            id="guided-field-prompt"
+                            className="guided-input guided-prompt"
+                            value={body.prompt ?? ''}
+                            onChange={(event) =>
+                              update('prompt', event.target.value)
+                            }
+                            aria-invalid={
+                              Boolean(fieldError('prompt')) || undefined
+                            }
+                            aria-describedby={
+                              fieldError('prompt')
+                                ? 'guided-error-prompt'
+                                : undefined
+                            }
+                          />
+                        </GuidedField>
+                        <GuidedField
+                          name="model"
+                          required
+                          error={fieldError('model')}
+                        >
+                          {select(
+                            'model',
+                            FRAME_MODELS.map((model) => ({
+                              value: model,
+                              label: model,
+                            })),
+                            changeModel,
+                          )}
+                        </GuidedField>
+                        <GuidedField
+                          name="quality"
+                          required
+                          error={fieldError('quality')}
+                        >
+                          {select(
+                            'quality',
+                            FRAME_QUALITIES.map((quality) => ({
+                              value: quality,
+                              label: quality,
+                            })),
+                          )}
+                        </GuidedField>
+                        <GuidedField
+                          name="duration"
+                          type="integer"
+                          required
+                          error={fieldError('duration')}
+                        >
+                          {select(
+                            'duration',
+                            frameDurationOptions(body.model, body.quality).map(
+                              (duration) => ({
+                                value: duration,
+                                label: `${duration} s`,
+                              }),
+                            ),
+                          )}
+                        </GuidedField>
+                        {['first_frame_img', 'last_frame_img', 'seed'].map(
+                          (name) => (
+                            <GuidedField
+                              key={name}
+                              name={name}
+                              type="integer"
+                              required={name !== 'seed'}
+                              error={fieldError(name)}
+                            >
+                              {input(name, 'number')}
+                            </GuidedField>
                           ),
                         )}
-                      </GuidedField>
-                      {['first_frame_img', 'last_frame_img', 'seed'].map(
-                        (name) => (
+                        {modeAudio === 'generated' && (
                           <GuidedField
-                            key={name}
-                            name={name}
-                            required={name !== 'seed'}
-                            error={fieldError(name)}
+                            name="generate_audio_switch"
+                            type="boolean"
+                            error={fieldError('generate_audio_switch')}
                           >
-                            {input(name, 'number')}
+                            {select('generate_audio_switch', [
+                              { value: undefined, label: 'Unset' },
+                              { value: true, label: 'True' },
+                              { value: false, label: 'False' },
+                            ])}
                           </GuidedField>
-                        ),
-                      )}
-                      {modeAudio === 'generated' && (
-                        <GuidedField
-                          name="generate_audio_switch"
-                          error={fieldError('generate_audio_switch')}
-                        >
-                          {select('generate_audio_switch', [
-                            { value: undefined, label: 'Unset' },
-                            { value: true, label: 'True' },
-                            { value: false, label: 'False' },
-                          ])}
-                        </GuidedField>
-                      )}
-                      {modeAudio === 'legacy' &&
-                        LEGACY_AUDIO_FIELDS.map((name) => (
-                          <GuidedField
-                            key={name}
-                            name={name}
-                            error={fieldError(name)}
-                          >
-                            {input(name)}
-                          </GuidedField>
-                        ))}
-                    </div>
-                  )}
+                        )}
+                        {modeAudio === 'legacy' &&
+                          LEGACY_AUDIO_FIELDS.map((name) => (
+                            <GuidedField
+                              key={name}
+                              name={name}
+                              error={fieldError(name)}
+                            >
+                              {input(name)}
+                            </GuidedField>
+                          ))}
+                      </div>
+                    )}
+                  </div>
                 </section>
                 <section
                   className="guided-preview-panel"
@@ -660,11 +693,6 @@ export const GuidedFirstLastFrame = () => {
                       {mode === 'json' ? draft : JSON.stringify(body, null, 2)}
                     </code>
                   </pre>
-                  <p className="guided-preview-note">
-                    Form model changes preserve hidden audio values. A complete
-                    valid JSON edit replaces the request and removes omitted
-                    cached values.
-                  </p>
                 </section>
               </div>
               <footer
